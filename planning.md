@@ -141,12 +141,19 @@ Write out what a full user interaction looks like from start to finish — tool 
 
 **Step 1:**
 <!-- What does the agent do first? Which tool is called? With what input? -->
+The agent calls search_listings("vintage graphic tee", size=None, max_price=30). The tool searches the listings dataset and returns matching items. The first result is selected and stored as selected_item.
 
 **Step 2:**
 <!-- What happens next? What was returned from step 1? What tool is called now? -->
+The agent calls suggest_outfit(selected_item, wardrobe). The selected listing and the user's wardrobe are used to generate an outfit recommendation. The recommendation is stored as outfit_suggestion.
 
 **Step 3:**
 <!-- Continue until the full interaction is complete -->
+The agent calls create_fit_card(outfit_suggestion, selected_item). The tool generates a social-media-style caption and stores it as fit_card.
 
 **Final output to user:**
 <!-- What does the user actually see at the end? -->
+The user sees:
+1. The selected thrift listing and item details.
+2. An outfit recommendation showing how to style the item.
+3. A shareable fit card caption generated from the outfit recommendation.
