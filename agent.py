@@ -19,6 +19,7 @@ Usage (once implemented):
 """
 
 from tools import search_listings, suggest_outfit, create_fit_card
+import re
 
 
 # ── session state ─────────────────────────────────────────────────────────────
@@ -94,7 +95,67 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     # TODO: implement the planning loop
     session = _new_session(query, wardrobe)
-    session["error"] = "Planning loop not yet implemented."
+
+    # Step 2: Parse query
+
+    max_price = None
+    size = None
+
+    price_match = re.search(r'under\s*\$?(\d+)', query.lower())
+    if price_match:
+        max_price = float(price_match.group(1))
+
+    size_match = re.search(r'size\s+([a-zA-Z0-9/]+)', query, re.IGNORECASE)
+    if size_match:
+        size = size_match.group(1)
+
+    description = query
+    description = re.sub(r'under\s*\$?\d+', '', description, flags=re.IGNORECASE)
+    description = re.sub(r'size\s+[a-zA-Z0-9/]+', '', description, flags=re.IGNORECASE)
+    description = description.strip()
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price
+    }
+
+    # Step 3: Search listings
+
+    results = search_listings(
+        description=description,
+        size=size,
+        max_price=max_price
+    )
+
+    session["search_results"] = results
+
+    if not results:
+        session["error"] = (
+            "No matching listings were found. "
+            "Try adjusting your description, size, or budget."
+        )
+        return session
+
+    # Step 4: Select top result
+
+    session["selected_item"] = results[0]
+
+    # Step 5: Outfit suggestion
+
+    session["outfit_suggestion"] = suggest_outfit(
+        session["selected_item"],
+        wardrobe
+    )
+
+    # Step 6: Create fit card
+
+    session["fit_card"] = create_fit_card(
+        session["outfit_suggestion"],
+        session["selected_item"]
+    )
+
+    # Step 7: Return session
     return session
 
 
